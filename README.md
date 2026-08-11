@@ -1,34 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# closedai
 
-## Getting Started
+A private Next.js application using Google sign-in through Better Auth, Drizzle ORM, and PostgreSQL. The production target is Google Cloud Run with Cloud SQL in project `closedai-505222`.
 
-First, run the development server:
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+cp .env.example .env.local
+docker compose up -d --wait
+pnpm install
+pnpm db:migrate
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create Google OAuth credentials and put the client ID and secret in `.env.local`. For local development, register this authorized redirect URI:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000/api/auth/callback/google
+```
 
-## Learn More
+Generate `BETTER_AUTH_SECRET` with at least 32 random characters. For example:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+openssl rand -base64 32
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Authentication boundary
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+All application routes require a valid database-backed session. The only anonymous surfaces are `/sign-in`, Better Auth's `/api/auth/*` endpoints needed to complete OAuth, and framework static assets.
 
-## Deploy on Vercel
+`src/proxy.ts` performs an optimistic cookie check. The authenticated route-group layout then validates the session against PostgreSQL, so a forged or expired cookie does not grant access.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This is an authentication boundary, not yet an invite or email allowlist. Any Google account allowed by the OAuth consent configuration can create an application user until an authorization policy is added.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Schema and migrations
+
+Better Auth describes the auth tables, but Drizzle is the only migration ledger:
+
+```bash
+# Regenerate src/db/schema/auth.ts after changing Better Auth options/plugins.
+pnpm auth:schema
+
+# Review the generated schema, then create a SQL migration.
+pnpm db:generate
+
+# Apply checked-in migrations to the configured database.
+pnpm db:migrate
+```
+
+Do not run Better Auth's direct `migrate` command. It is not the production migration path for this project.
+
+## Checks
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm db:check
+pnpm build
+```
+
+The included `Dockerfile` builds Next.js standalone output and runs it on port `8080`, which matches Cloud Run's container contract.
