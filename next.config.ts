@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   agentRules: false,
-  output: "standalone",
+  output: process.env.VERCEL ? undefined : "standalone",
   reactCompiler: true,
 };
 

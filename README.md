@@ -58,4 +58,4 @@ pnpm db:check
 pnpm build
 ```
 
-The included `Dockerfile` builds Next.js standalone output and runs it on port `8080`, which matches Cloud Run's container contract.
+The included `Dockerfile` builds Next.js standalone output and runs it on port `8080`, which matches Cloud Run's container contract. Standalone output is disabled automatically when Vercel builds the repository because Vercel supplies its own Next.js packaging.
