@@ -1,0 +1,7 @@
+# Provider binaries downloaded by `terraform init`
+.terraform/
+
+# State lives in GCS; never commit a local copy if one ever appears
+*.tfstate
+*.tfstate.backup
+crash.log
