@@ -62,9 +62,8 @@ resource "google_cloud_run_v2_service" "app" {
       }
       env {
         # OAuth client IDs are public identifiers, not secrets.
-        # Placeholder until the OAuth consent screen exists.
         name  = "GOOGLE_CLIENT_ID"
-        value = "placeholder-until-oauth-configured"
+        value = "119435485881-eoka8okvf8qs41u9qhr8ed89etgeoj1h.apps.googleusercontent.com"
       }
 
       # Secret-backed env vars: Cloud Run reads the value from Secret
